@@ -43,7 +43,7 @@ if minor_version % 2:
 
 requires = ['python-ldap']
 for dep in info.get('depends', []):
-    if not re.match(r'(ir|res|webdav)(\W|$)', dep):
+    if not re.match(r'(ir|res)(\W|$)', dep):
         requires.append(get_require_version('trytond_%s' % dep))
 requires.append(get_require_version('trytond'))
 
@@ -77,6 +77,7 @@ setup(name=name,
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Natural Language :: Bulgarian',
         'Natural Language :: Catalan',
+        'Natural Language :: Chinese (Simplified)',
         'Natural Language :: Czech',
         'Natural Language :: Dutch',
         'Natural Language :: English',
