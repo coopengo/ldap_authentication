@@ -2,8 +2,8 @@
 # this repository contains the full copyright notices and license terms.
 import unittest
 
-from mock import patch
-import ldap
+from mock import patch, ANY
+import ldap3
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import ModuleTestCase, with_transaction
@@ -21,11 +21,12 @@ class LDAPAuthenticationTestCase(ModuleTestCase):
 
     def setUp(self):
         super(LDAPAuthenticationTestCase, self).setUp()
+        methods = config.get('session', 'authentications')
+        config.set('session', 'authentications', 'ldap')
+        self.addCleanup(config.set, 'session', 'authentications', methods)
         config.add_section(section)
         config.set(section, 'uri', 'ldap://localhost/dc=tryton,dc=org')
-
-    def tearDown(self):
-        config.remove_section(section)
+        self.addCleanup(config.remove_section, section)
 
     @with_transaction()
     def test_user_get_login(self):
@@ -33,20 +34,24 @@ class LDAPAuthenticationTestCase(ModuleTestCase):
         pool = Pool()
         User = pool.get('res.user')
 
-        @patch.object(ldap, 'initialize')
+        @patch.object(ldap3, 'Connection')
         @patch.object(User, 'ldap_search_user')
-        def get_login(login, password, find, ldap_search_user, initialize):
-            con = initialize.return_value
-            con.simple_bind_s.return_value = True
+        def get_login(login, password, find, ldap_search_user, Connection):
+            con = Connection.return_value
+            con.bind.return_value = bool(find)
             if find:
                 ldap_search_user.return_value = [('dn', {'uid': [find]})]
             else:
                 ldap_search_user.return_value = None
-            return User.get_login(login, password)
+            user_id = User.get_login(login, {
+                    'password': password,
+                    })
+            if find:
+                Connection.assert_called_with(ANY, ANY, password)
+            return user_id
 
         # Test existing user
         user, = User.search([('login', '=', 'admin')])
-        self.assertEqual(get_login('admin', 'admin', None), user.id)
         self.assertEqual(get_login('admin', 'admin', 'admin'), user.id)
         self.assertEqual(get_login('AdMiN', 'admin', 'admin'), user.id)
 
