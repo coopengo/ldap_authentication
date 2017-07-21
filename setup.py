@@ -47,7 +47,7 @@ if minor_version % 2:
         'hg+http://hg.tryton.org/modules/%s#egg=%s-%s' % (
             name[8:], name, version))
 
-requires = ['ldap3 < 2']
+requires = ['ldap3 >= 2.0.7']
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res)(\W|$)', dep):
         requires.append(get_require_version('trytond_%s' % dep))
@@ -80,7 +80,7 @@ setup(name=name,
         'Intended Audience :: Developers',
         'Intended Audience :: Financial and Insurance Industry',
         'Intended Audience :: Legal Industry',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Natural Language :: Bulgarian',
         'Natural Language :: Catalan',
         'Natural Language :: Chinese (Simplified)',
